@@ -10,13 +10,14 @@
       text-align: center;
     }
     canvas {
-      display: block;
+      display: none;
       margin: 0 auto;
       border: 2px solid #333;
       background-color: #f9f9f9;
       touch-action: manipulation;
     }
     #toolbar {
+      display: none;
       position: fixed;
       bottom: 0;
       left: 0;
@@ -37,10 +38,35 @@
       color: white;
       border-radius: 6px;
     }
+    #playerForm {
+      margin-top: 40px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px;
+      width: 250px;
+    }
+    #startButton {
+      padding: 12px 24px;
+      font-size: 18px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h2>Pet Valu Delivery Planner</h2>
+
+  <div id="playerForm">
+    <input type="text" id="playerName" placeholder="Enter your name" required><br>
+    <input type="tel" id="playerPhone" placeholder="Enter your phone number" required><br>
+    <button id="startButton" onclick="startGame()">Start Game</button>
+  </div>
+
   <canvas id="tspCanvas" width="600" height="600"></canvas>
 
   <div id="toolbar">
@@ -51,6 +77,8 @@
   <script>
     const canvas = document.getElementById("tspCanvas");
     const ctx = canvas.getContext("2d");
+    const toolbar = document.getElementById("toolbar");
+    const playerForm = document.getElementById("playerForm");
 
     const cities = [
       { x: 100, y: 100 }, { x: 200, y: 80 }, { x: 300, y: 120 }, { x: 400, y: 100 }, { x: 450, y: 200 },
@@ -61,6 +89,26 @@
 
     let path = [];
     let gameOver = false;
+    let playerName = "";
+    let playerPhone = "";
+
+    function startGame() {
+      const nameInput = document.getElementById("playerName").value.trim();
+      const phoneInput = document.getElementById("playerPhone").value.trim();
+
+      if (!nameInput || !phoneInput) {
+        alert("Please enter both your name and phone number.");
+        return;
+      }
+
+      playerName = nameInput;
+      playerPhone = phoneInput;
+
+      playerForm.style.display = "none";
+      canvas.style.display = "block";
+      toolbar.style.display = "flex";
+      drawCities();
+    }
 
     function drawCities() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -101,13 +149,13 @@
 
     function drawTruck(x, y) {
       ctx.fillStyle = "green";
-      ctx.fillRect(x - 6, y - 4, 12, 8); // body
+      ctx.fillRect(x - 6, y - 4, 12, 8);
       ctx.fillStyle = "darkgreen";
-      ctx.fillRect(x - 6, y - 4, 4, 8); // cab
+      ctx.fillRect(x - 6, y - 4, 4, 8);
       ctx.fillStyle = "black";
       ctx.beginPath();
-      ctx.arc(x - 4, y + 6, 3, 0, Math.PI * 2); // wheel 1
-      ctx.arc(x + 4, y + 6, 3, 0, Math.PI * 2); // wheel 2
+      ctx.arc(x - 4, y + 6, 3, 0, Math.PI * 2);
+      ctx.arc(x + 4, y + 6, 3, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -177,23 +225,4 @@
       path = [];
       gameOver = false;
       drawCities();
-    }
-
-    function showDistance() {
-      if (path.length === cities.length) {
-        let dist = 0;
-        for (let i = 0; i < path.length; i++) {
-          const a = cities[path[i]];
-          const b = cities[(i + 1) % path.length];
-          dist += Math.hypot(b.x - a.x, b.y - a.y);
-        }
-        alert(`Total distance: ${dist.toFixed(2)}`);
-      } else {
-        alert("Complete the path first!");
-      }
-    }
-
-    window.onload = drawCities;
-  </script>
-</body>
-</html>
+   
