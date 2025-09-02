@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pet Valu Delivery Planner</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      border: 2px solid #333;
+      background-color: #f9f9f9;
+      touch-action: manipulation;
+    }
+    #toolbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #eee;
+      padding: 10px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 2px solid #333;
+    }
+    #toolbar button {
+      font-size: 18px;
+      padding: 12px 20px;
+      flex: 1;
+      margin: 0 5px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Pet Valu Delivery Planner</h2>
+  <canvas id="tspCanvas" width="600" height="600"></canvas>
+
+  <div id="toolbar">
+    <button onclick="restartGame()">🔄 Restart</button>
+    <button onclick="showDistance()">📏 Show Distance</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("tspCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const cities = [
+      { x: 100, y: 100 }, { x: 200, y: 80 }, { x: 300, y: 120 }, { x: 400, y: 100 }, { x: 450, y: 200 },
+      { x: 400, y: 300 }, { x: 300, y: 350 }, { x: 200, y: 300 }, { x: 100, y: 250 }, { x: 150, y: 180 },
+      { x: 250, y: 220 }, { x: 350, y: 250 }, { x: 420, y: 180 }, { x: 380, y: 60 }, { x: 280, y: 60 },
+      { x: 180, y: 60 }, { x: 80, y: 80 }, { x: 60, y: 180 }, { x: 60, y: 280 }, { x: 150, y: 350 }
+    ];
+
+    let path = [];
+    let gameOver = false;
+
+    function drawCities() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      cities.forEach((city, index) => {
+        ctx.beginPath();
+        ctx.arc(city.x, city.y, 8, 0, Math.PI * 2);
+        ctx.fillStyle = "blue";
+        ctx.fill();
+        ctx.stroke();
+        ctx.closePath();
+
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText(index, city.x - 10, city.y - 12);
+      });
+    }
+
+    function drawPath() {
+      ctx.strokeStyle = "red";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < path.length - 1; i++) {
+        const a = cities[path[i]];
+        const b = cities[path[i + 1]];
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      if (path.length === cities.length) {
+        const a = cities[path[path.length - 1]];
+        const b = cities[path[0]];
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
+
+    function drawTruck(x, y) {
+      ctx.fillStyle = "green";
+      ctx.fillRect(x - 6, y - 4, 12, 8); // body
+      ctx.fillStyle = "darkgreen";
+      ctx.fillRect(x - 6, y - 4, 4, 8); // cab
+      ctx.fillStyle = "black";
+      ctx.beginPath();
+      ctx.arc(x - 4, y + 6, 3, 0, Math.PI * 2); // wheel 1
+      ctx.arc(x + 4, y + 6, 3, 0, Math.PI * 2); // wheel 2
+      ctx.fill();
+    }
+
+    function animateTruck(startIndex, endIndex) {
+      const start = cities[startIndex];
+      const end = cities[endIndex];
+      const steps = 60;
+      for (let i = 0; i <= steps; i++) {
+        const x = start.x + (end.x - start.x) * i / steps;
+        const y = start.y + (end.y - start.y) * i / steps;
+        drawCities();
+        drawPath();
+        drawTruck(x, y);
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText("Delivering...", 10, canvas.height - 20);
+        ctx.stroke();
+        ctx.closePath();
+        // Delay
+        setTimeout(() => {}, 25);
+      }
+    }
+
+    function getCityAt(x, y) {
+      for (let i = 0; i < cities.length; i++) {
+        const city = cities[i];
+        const dx = x - city.x;
+        const dy = y - city.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 12) return i;
+      }
+      return null;
+    }
+
+    function handleTap(x, y) {
+      if (gameOver) return;
+      const cityIndex = getCityAt(x, y);
+      if (cityIndex !== null && !path.includes(cityIndex)) {
+        path.push(cityIndex);
+        if (path.length > 1) {
+          animateTruck(path[path.length - 2], path[path.length - 1]);
+        }
+        if (path.length === cities.length) {
+          animateTruck(path[path.length - 1], path[0]);
+          gameOver = true;
+        }
+        drawCities();
+        drawPath();
+      }
+    }
+
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      handleTap(x, y);
+    });
+
+    canvas.addEventListener("touchstart", (e) => {
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      handleTap(x, y);
+    });
+
+    function restartGame() {
+      path = [];
+      gameOver = false;
+      drawCities();
+    }
+
+    function showDistance() {
+      if (path.length === cities.length) {
+        let dist = 0;
+        for (let i = 0; i < path.length; i++) {
+          const a = cities[path[i]];
+          const b = cities[path[(i + 1) % path.length]];
+          dist += Math.hypot(b.x - a.x, b.y - a.y);
+        }
+        alert(`Total distance: ${dist.toFixed(2)}`);
+      } else {
+        alert("Complete the path first!");
+      }
+    }
+
+    drawCities();
+  </script>
+</body>
+</html>
