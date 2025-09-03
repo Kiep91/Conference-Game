@@ -120,4 +120,109 @@
         scores.push({ name, phone, distance });
         scores.sort((a,b) => a.distance - b.distance);
         if (scores.length > 10) scores.length = 10;
-        localStorage.setItem('
+        localStorage.setItem('tsp_leaderboard', JSON.stringify(scores));
+      }
+
+      function updateLeaderboard() {
+        const scores = loadScores();
+        let html = '<h3>Leaderboard</h3><ol>';
+        if (!scores.length) {
+          html += '<li>No scores yet. Be the first to play!</li>';
+        } else {
+          scores.forEach((s, i) => {
+            const last4 = s.phone.slice(-4);
+            let medal = '';
+            if (i === 0) medal = '🥇 ';
+            else if (i === 1) medal = '🥈 ';
+            else if (i === 2) medal = '🥉 ';
+            html += `<li>${medal}${s.name} (****${last4}): ${s.distance.toFixed(2)}</li>`;
+          });
+        }
+        html += '</ol>';
+        leaderboard.innerHTML = html;
+      }
+
+      function drawCities() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        cities.forEach((c,i) => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, 8, 0, 2*Math.PI);
+          ctx.fillStyle = 'blue';
+          ctx.fill();
+          ctx.stroke();
+          ctx.closePath();
+          ctx.fillStyle = 'black';
+          ctx.font = '14px Arial';
+          ctx.fillText(i, c.x-10, c.y-12);
+        });
+      }
+
+      function drawPath() {
+        if (path.length < 2) return;
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        for (let i=0; i<path.length-1; i++) {
+          const a = cities[path[i]], b = cities[path[i+1]];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+        if (path.length === cities.length) {
+          const a = cities[path[path.length-1]], b = cities[path[0]];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+
+      function drawTruck(x,y) {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(x-6, y-4, 12, 8);
+        ctx.fillStyle = 'darkgreen';
+        ctx.fillRect(x-6, y-4, 4, 8);
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(x-4, y+6, 3, 0, 2*Math.PI);
+        ctx.arc(x+4, y+6, 3, 0, 2*Math.PI);
+        ctx.fill();
+      }
+
+      function animateTruck(s,e) {
+        const start = cities[s], end = cities[e];
+        const steps = 60;
+        let i = 0;
+        function frame(){
+          if (i>steps) return;
+          const x = start.x + (end.x-start.x)*i/steps;
+          const y = start.y + (end.y-start.y)*i/steps;
+          drawCities();
+          drawPath();
+          drawTruck(x,y);
+          i++;
+          requestAnimationFrame(frame);
+        }
+        frame();
+      }
+
+      function getCityAt(x,y) {
+        for (let i=0; i<cities.length; i++){
+          const dx = x - cities[i].x, dy = y - cities[i].y;
+          if (Math.hypot(dx,dy) < 15) return i;
+        }
+        return null;
+      }
+
+      function handleTap(rawX, rawY) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width  / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (rawX - rect.left)*scaleX;
+        const y = (rawY - rect.top)*scaleY;
+        if (gameOver) return;
+        const idx = getCityAt(x,y);
+        if (idx !== null && !path.includes(idx)) {
+          path.push(idx);
+          if (path.length > 1) animateTruck(path[path.length-2], path[path.length-1]);
+         
