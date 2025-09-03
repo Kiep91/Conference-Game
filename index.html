@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pet Valu Delivery Planner</title>
   <style>
     body {
@@ -62,8 +62,8 @@
   <h2>Pet Valu Delivery Planner</h2>
 
   <div id="playerForm">
-    <input type="text" id="playerName" placeholder="Enter your name" required><br>
-    <input type="tel" id="playerPhone" placeholder="Enter your phone number" required><br>
+    <input type="text" id="playerName" placeholder="Enter your name" required /><br />
+    <input type="tel" id="playerPhone" placeholder="Enter your phone number" required /><br />
     <button id="startButton" onclick="startGame()">Start Game</button>
   </div>
 
@@ -88,141 +88,3 @@
     ];
 
     let path = [];
-    let gameOver = false;
-    let playerName = "";
-    let playerPhone = "";
-
-    function startGame() {
-      const nameInput = document.getElementById("playerName").value.trim();
-      const phoneInput = document.getElementById("playerPhone").value.trim();
-
-      if (!nameInput || !phoneInput) {
-        alert("Please enter both your name and phone number.");
-        return;
-      }
-
-      playerName = nameInput;
-      playerPhone = phoneInput;
-
-      playerForm.style.display = "none";
-      canvas.style.display = "block";
-      toolbar.style.display = "flex";
-      drawCities();
-    }
-
-    function drawCities() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      cities.forEach((city, index) => {
-        ctx.beginPath();
-        ctx.arc(city.x, city.y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = "blue";
-        ctx.fill();
-        ctx.stroke();
-        ctx.closePath();
-
-        ctx.fillStyle = "black";
-        ctx.font = "14px Arial";
-        ctx.fillText(index, city.x - 10, city.y - 12);
-      });
-    }
-
-    function drawPath() {
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 2;
-      for (let i = 0; i < path.length - 1; i++) {
-        const a = cities[path[i]];
-        const b = cities[path[i + 1]];
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-      }
-      if (path.length === cities.length) {
-        const a = cities[path[path.length - 1]];
-        const b = cities[path[0]];
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.stroke();
-      }
-    }
-
-    function drawTruck(x, y) {
-      ctx.fillStyle = "green";
-      ctx.fillRect(x - 6, y - 4, 12, 8);
-      ctx.fillStyle = "darkgreen";
-      ctx.fillRect(x - 6, y - 4, 4, 8);
-      ctx.fillStyle = "black";
-      ctx.beginPath();
-      ctx.arc(x - 4, y + 6, 3, 0, Math.PI * 2);
-      ctx.arc(x + 4, y + 6, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function animateTruck(startIndex, endIndex) {
-      const start = cities[startIndex];
-      const end = cities[endIndex];
-      const steps = 60;
-      let i = 0;
-
-      function frame() {
-        if (i > steps) return;
-        const x = start.x + (end.x - start.x) * i / steps;
-        const y = start.y + (end.y - start.y) * i / steps;
-        drawCities();
-        drawPath();
-        drawTruck(x, y);
-        i++;
-        requestAnimationFrame(frame);
-      }
-
-      frame();
-    }
-
-    function getCityAt(x, y) {
-      for (let i = 0; i < cities.length; i++) {
-        const city = cities[i];
-        const dx = x - city.x;
-        const dy = y - city.y;
-        if (Math.sqrt(dx * dx + dy * dy) < 15) return i;
-      }
-      return null;
-    }
-
-    function handleTap(rawX, rawY) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (rawX - rect.left) * scaleX;
-      const y = (rawY - rect.top) * scaleY;
-
-      if (gameOver) return;
-      const cityIndex = getCityAt(x, y);
-      if (cityIndex !== null && !path.includes(cityIndex)) {
-        path.push(cityIndex);
-        if (path.length > 1) {
-          animateTruck(path[path.length - 2], path[path.length - 1]);
-        }
-        if (path.length === cities.length) {
-          animateTruck(path[path.length - 1], path[0]);
-          gameOver = true;
-        }
-        drawCities();
-        drawPath();
-      }
-    }
-
-    canvas.addEventListener("click", (e) => {
-      handleTap(e.clientX, e.clientY);
-    });
-
-    canvas.addEventListener("touchstart", (e) => {
-      const touch = e.touches[0];
-      handleTap(touch.clientX, touch.clientY);
-    });
-
-    function restartGame() {
-      path = [];
-      gameOver = false;
-      drawCities();
-   
