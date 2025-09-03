@@ -10,7 +10,7 @@
       text-align: center;
     }
     #playerForm {
-      margin-top: 60px;
+      margin-top: 40px;
     }
     #playerForm input {
       display: block;
@@ -75,3 +75,49 @@
     <input id="playerName"  type="text" placeholder="Enter your name" />
     <input id="playerPhone" type="tel"  placeholder="Enter your phone number" />
     <button id="startButton" type="button">Start Game</button>
+  </div>
+
+  <canvas id="tspCanvas" width="600" height="600"></canvas>
+
+  <div id="toolbar">
+    <button id="restartBtn" type="button">🔄 Restart</button>
+    <button id="distanceBtn" type="button">📏 Show Distance</button>
+  </div>
+
+  <div id="leaderboard"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form         = document.getElementById('playerForm');
+      const nameInput    = document.getElementById('playerName');
+      const phoneInput   = document.getElementById('playerPhone');
+      const startBtn     = document.getElementById('startButton');
+      const canvas       = document.getElementById('tspCanvas');
+      const ctx          = canvas.getContext('2d');
+      const toolbar      = document.getElementById('toolbar');
+      const restartBtn   = document.getElementById('restartBtn');
+      const distanceBtn  = document.getElementById('distanceBtn');
+      const leaderboard  = document.getElementById('leaderboard');
+
+      const cities = [
+        {x:100,y:100},{x:200,y:80},{x:300,y:120},{x:400,y:100},{x:450,y:200},
+        {x:400,y:300},{x:300,y:350},{x:200,y:300},{x:100,y:250},{x:150,y:180},
+        {x:250,y:220},{x:350,y:250},{x:420,y:180},{x:380,y:60},{x:280,y:60},
+        {x:180,y:60},{x:80,y:80},{x:60,y:180},{x:60,y:280},{x:150,y:350}
+      ];
+      let path = [];
+      let gameOver = false;
+      let playerName = '';
+      let playerPhone = '';
+
+      function loadScores() {
+        const data = localStorage.getItem('tsp_leaderboard');
+        return data ? JSON.parse(data) : [];
+      }
+
+      function saveScore(name, phone, distance) {
+        const scores = loadScores();
+        scores.push({ name, phone, distance });
+        scores.sort((a,b) => a.distance - b.distance);
+        if (scores.length > 10) scores.length = 10;
+        localStorage.setItem('
